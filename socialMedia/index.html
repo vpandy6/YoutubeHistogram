@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Data Visualization</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            text-align: center;
+            background-color: #f1f1f1;
+        }
+
+        #data {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        canvas {
+            border: 1px solid #000;
+            margin-top: 20px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video Data Visualization</h1>
+    <div id="data">Loading data...</div>
+    <button onclick="fetchYouTubeData()">Fetch YouTube Video Data</button>
+    
+    <canvas id="histogram" width="400" height="300"></canvas>
+
+    <script>
+        async function fetchYouTubeData() {
+            const videoId = 'cZTlRmNgJz4';  // YouTube video ID
+            const apiKey = 'AIzaSyAi4NWdW0ZdCH7GeG4_efOzZh2vfHL046E';  // Replace with your YouTube API key
+
+            // Constructing the API URL
+            const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoId}&key=${apiKey}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.items.length > 0) {
+                    const video = data.items[0];
+                    const title = video.snippet.title;
+                    const viewCount = parseInt(video.statistics.viewCount, 10);
+                    const likeCount = parseInt(video.statistics.likeCount, 10);
+                    const commentCount = parseInt(video.statistics.commentCount, 10);
+
+                    // Displaying video data
+                    document.getElementById('data').innerHTML = `
+                        <h2>Video: ${title}</h2>
+                        <p>Views: ${viewCount}</p>
+                        <p>Likes: ${likeCount}</p>
+                        <p>Comments: ${commentCount}</p>
+                    `;
+
+                    // Drawing the histogram
+                    drawHistogram(viewCount, likeCount, commentCount);
+                } else {
+                    document.getElementById('data').innerText = 'No data found for this video.';
+                }
+            } catch (error) {
+                alert('Failed to fetch data from YouTube API');
+            }
+        }
+
+        // Function to draw the histogram on the canvas
+        function drawHistogram(views, likes, comments) {
+            const canvas = document.getElementById('histogram');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear any existing drawings
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Data for the histogram
+            const data = [views, likes, comments];
+            const labels = ['Views', 'Likes', 'Comments'];
+
+            // Setting up the bar width and space between bars
+            const barWidth = 100;
+            const barGap = 50;
+            const maxHeight = 250;
+            const maxValue = Math.max(...data);
+
+            // Drawing each bar in the histogram
+            for (let i = 0; i < data.length; i++) {
+                const barHeight = (data[i] / maxValue) * maxHeight;
+
+                ctx.fillStyle = '#4caf50'; // Green color for bars
+                ctx.fillRect(i * (barWidth + barGap), canvas.height - barHeight, barWidth, barHeight);
+                
+                // Adding the labels
+                ctx.fillStyle = '#000'; // Black color for text
+                ctx.fillText(labels[i], i * (barWidth + barGap) + 10, canvas.height - 10);
+            }
+        }
+    </script>
+</body>
+</html>
